@@ -4,14 +4,28 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import co.com.bancolombia.model.stat.Stat;
+import co.com.bancolombia.usecase.savestat.SaveStatUseCase;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
 public class Handler {
+    private final SaveStatUseCase saveStatUseCase;
 
     public Mono<ServerResponse> processStat(ServerRequest serverRequest) {
-        return ServerResponse.ok().bodyValue("Works");
+        return serverRequest.bodyToMono(Stat.class)
+                .flatMap(saveStatUseCase::saveStat)
+                // .doOnSuccess(saved -> log.info("Successfully saved stat with timestamp: "+
+                // saved.getTimestamp()))
+                .flatMap(savedStat -> ServerResponse
+                        .ok()
+                        .bodyValue("Successfully saved stat with timestamp: " + savedStat.getTimestamp()))
+                .onErrorResume(error -> {
+                    return ServerResponse
+                            .badRequest()
+                            .bodyValue("Error processing the request: " + error.getMessage());
+                });
     }
 }

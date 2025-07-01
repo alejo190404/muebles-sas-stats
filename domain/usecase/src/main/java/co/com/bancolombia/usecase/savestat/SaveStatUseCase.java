@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SaveStatUseCase {
+    
     private final StatRepository statRepository;
 
     public Mono<Stat> saveStat(Stat stat) {
