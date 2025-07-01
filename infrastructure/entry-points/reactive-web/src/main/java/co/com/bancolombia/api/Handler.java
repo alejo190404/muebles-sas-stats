@@ -17,8 +17,6 @@ public class Handler {
     public Mono<ServerResponse> processStat(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(Stat.class)
                 .flatMap(saveStatUseCase::saveStat)
-                // .doOnSuccess(saved -> log.info("Successfully saved stat with timestamp: "+
-                // saved.getTimestamp()))
                 .flatMap(savedStat -> ServerResponse
                         .ok()
                         .bodyValue("Successfully saved stat with timestamp: " + savedStat.getTimestamp()))
