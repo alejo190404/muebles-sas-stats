@@ -54,6 +54,24 @@ services:
       retries: 5
       start_period: 40s
 
+  rabbitmq-setup:
+    image: rabbitmq:3-management
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    command: >
+      bash -c "
+        rabbitmqadmin -H rabbitmq -u guest -p guest declare queue name=event.stats.validated durable=true &&
+        rabbitmqadmin -H rabbitmq -u guest -p guest declare exchange name=domainEvents type=topic &&
+        rabbitmqadmin -H rabbitmq -u guest -p guest declare binding source=domainEvents destination=event.stats.validated routing_key=event.stats.validated
+      "
+    restart: "on-failure"
+    networks:
+      - muebles-network
+
   muebles-sas:
     build:
       context: ..
@@ -64,8 +82,8 @@ services:
     depends_on:
       dynamodb-local:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      rabbitmq-setup:
+        condition: service_completed_successfully
 
     environment:
       aws.region: us-east-1
