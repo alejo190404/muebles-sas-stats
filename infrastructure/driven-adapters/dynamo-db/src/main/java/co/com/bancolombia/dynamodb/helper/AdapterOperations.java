@@ -6,14 +6,17 @@ import java.util.function.Function;
 import org.reactivecommons.utils.ObjectMapper;
 
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 
-public abstract class AdapterOperations<E, V> {
+public abstract class AdapterOperations<E, K, V> {
     private final Class<V> dataClass;
+    private final Function<V, E> toEntityFn;
     protected ObjectMapper mapper;
     private final DynamoDbAsyncTable<V> table;
+    private final DynamoDbAsyncIndex<V> tableByIndex;
 
     @SuppressWarnings("unchecked")
     protected AdapterOperations(DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
@@ -21,10 +24,12 @@ public abstract class AdapterOperations<E, V> {
                                         Function<V, E> toEntityFn,
                                         String tableName,
                                         String... index) {
+        this.toEntityFn = toEntityFn;
         this.mapper = mapper;
         ParameterizedType genericSuperclass = (ParameterizedType) this.getClass().getGenericSuperclass();
-        this.dataClass = (Class<V>) genericSuperclass.getActualTypeArguments()[1];
+        this.dataClass = (Class<V>) genericSuperclass.getActualTypeArguments()[2];
         table = dynamoDbEnhancedAsyncClient.table(tableName, TableSchema.fromBean(dataClass));
+        tableByIndex = index.length > 0 ? table.index(index[0]) : null;
     }
 
     public Mono<E> save(E model) {

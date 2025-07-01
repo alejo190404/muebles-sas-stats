@@ -11,7 +11,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 
 
 @Repository
-public class DynamoDBAdapter extends AdapterOperations<Stat, co.com.bancolombia.dynamodb.model.Stat>  implements StatRepository{
+public class DynamoDBAdapter extends AdapterOperations<Stat, String, co.com.bancolombia.dynamodb.model.Stat>  implements StatRepository{
 
     public DynamoDBAdapter(DynamoDbEnhancedAsyncClient connectionFactory, ObjectMapper mapper) {
         super(connectionFactory, mapper, d -> mapper.map(d, Stat.class), "stats");
@@ -19,6 +19,6 @@ public class DynamoDBAdapter extends AdapterOperations<Stat, co.com.bancolombia.
 
     @Override
     public Mono<Stat> saveStat(Stat stat) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return super.save(stat);
     }
 }
